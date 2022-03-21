@@ -11,7 +11,7 @@ export function handleTransfer(event: Transfer): void {
     collectible = new Collectible(event.params.tokenId.toString())
   }
 
-  let cozyCheck = event.address == CozyCosmonautsAddress
+  let cozyCheck = event.address.toHexString() == CozyCosmonautsAddress
   let erc721Token = Erc721.bind(event.address)
   let tokenURIResult = erc721Token.try_tokenURI(event.params.tokenId)
   if (tokenURIResult.reverted) {

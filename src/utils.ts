@@ -1,3 +1,5 @@
+import { BigInt} from '@graphprotocol/graph-ts'
+
 export let IPFS_SCHEME = 'ipfs://'
 
 export let HTTP_SCHEME = 'https://'
@@ -19,7 +21,7 @@ export function getIpfsURL (ipfsURI: string): string {
 }
 
 export const CozyCosmonautsAddress = "0x32319834d90323127988E4e2DC7b2162d4262904"
-export function getCozyImage(cozyID: string): string {
-    return COZY_ASSET_URL + cozyID + '.png'
+export function getCozyImage(cozyID: BigInt): string {
+    return `${COZY_ASSET_URL}${cozyID}.png`
 }
 
