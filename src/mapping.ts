@@ -1,7 +1,7 @@
 import { ipfs, json, JSONValue, log, TypedMap } from '@graphprotocol/graph-ts'
 import { Transfer, Erc721 } from '../generated/Collectible/Erc721'
 import { Collectible, User } from '../generated/schema'
-import { BASE_IPFS_URL, getIpfsURL, HTTP_SCHEME, IPFS_SCHEME, CozyCosmonautsAddress, getCozyImage } from './utils'
+import { BASE_IPFS_URL, getIpfsURL, HTTP_SCHEME, IPFS_SCHEME, getDwebURL, COZY_ADDRESS } from './utils'
 
 export function handleTransfer(event: Transfer): void {
   log.info('Parsing Transfer for txHash {}', [event.transaction.hash.toHexString()])
@@ -11,13 +11,12 @@ export function handleTransfer(event: Transfer): void {
     collectible = new Collectible(event.params.tokenId.toString())
   }
 
-  let cozyCheck = event.address.toHexString() == CozyCosmonautsAddress
   let erc721Token = Erc721.bind(event.address)
   let tokenURIResult = erc721Token.try_tokenURI(event.params.tokenId)
   if (tokenURIResult.reverted) {
     return
   }
-
+  
   let tokenURI = tokenURIResult.value
   
   let contentPath: string
@@ -52,14 +51,15 @@ export function handleTransfer(event: Transfer): void {
     }
 
     let image = value.get('image')
-    if (image != null  && (cozyCheck =! true)) {
+    if (image != null) {
       let imageStr = image.toString()
       if (imageStr.includes(IPFS_SCHEME)) {
+        if (event.address.toHexString() == COZY_ADDRESS) {
+          imageStr = getDwebURL(imageStr)
+        }
         imageStr = getIpfsURL(imageStr)
       }
       collectible.imageURL = imageStr
-    } else if (cozyCheck){
-      collectible.imageURL = getCozyImage(event.params.tokenId)
     } else {
       return
     }
