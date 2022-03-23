@@ -106,12 +106,12 @@ export function handleTransfer(event: Transfer): void {
 
   let name = erc721Token.try_name()
   if (!name.reverted) {
-    collectible.collectionName = name.value
+    collectible.collectionName = normalize(name.value)
   }
 
   let symbol = erc721Token.try_symbol()
   if (!symbol.reverted) {
-    collectible.collectionSymbol = symbol.value
+    collectible.collectionSymbol = normalize(symbol.value)
   }
 
   collectible.owner = event.params.to.toHexString()
