@@ -1,6 +1,6 @@
 {
   "name": "@fuseio/nft-subgraph",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "scripts": {
     "create": "graph create fuseio/fuse-nft --node https://api.thegraph.com/deploy/",
     "create-local": "graph create fuseio/fuse-nft --node http://127.0.0.1:8020",
@@ -10,8 +10,9 @@
     "deploy-local": "graph deploy fuseio/fuse-nft --ipfs http://localhost:5001 --node http://127.0.0.1:8020"
   },
   "devDependencies": {
-    "@graphprotocol/graph-cli": "^0.20.1",
-    "@graphprotocol/graph-ts": "^0.20.0"
+    "@graphprotocol/graph-cli": "^0.20.0",
+    "@graphprotocol/graph-ts": "^0.18.1",
+    "matchstick-as": "^0.4.1"
   },
   "dependencies": {
     "babel-polyfill": "^6.26.0",

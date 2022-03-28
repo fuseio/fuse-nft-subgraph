@@ -5,7 +5,8 @@ export let IPFS_SCHEME = 'ipfs://'
 
 export let HTTP_SCHEME = 'https://'
 
-export let BASE_IPFS_URL = 'https://ipfs.io/ipfs/'
+// 'https://ipfs.io/ipfs/'
+export let BASE_IPFS_URL = 'https://gateway.pinata.cloud/ipfs/'
 
 export let DWEB_IPFS_URL = 'https://dweb.link/ipfs/'
 

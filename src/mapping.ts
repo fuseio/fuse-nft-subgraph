@@ -74,17 +74,17 @@ export function handleTransfer(event: Transfer): void {
   if (jsonResult.isError) return
 
   let value = jsonResult.value.toObject()
-  if (data != null) {
+  if (!!data) {
     let name = value.get('name')
     if (name != null) {
-      collectible.name = name.toString()
+      collectible.name = normalize(name.toString())
     } else {
       return
     }
 
     let description = value.get('description')
     if (description != null) {
-      collectible.description = description.toString()
+      collectible.description = normalize(description.toString())
     } else {
       return
     }
