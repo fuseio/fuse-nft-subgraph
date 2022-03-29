@@ -50,7 +50,7 @@ export function handleTransfer(event: Transfer): void {
     collectible = new Collectible(event.params.tokenId.toString())
   }
 
-  let erc721Token = Erc721.bind(event.address)
+  let erc721Token = EIP721.bind(event.address)
   let tokenURIResult = erc721Token.try_tokenURI(event.params.tokenId)
   if (tokenURIResult.reverted) {
     return
@@ -74,7 +74,7 @@ export function handleTransfer(event: Transfer): void {
   if (jsonResult.isError) return
 
   let value = jsonResult.value.toObject()
-  if (!!data) {
+  if (data != null) {
     let name = value.get('name')
     if (name != null) {
       collectible.name = normalize(name.toString())
