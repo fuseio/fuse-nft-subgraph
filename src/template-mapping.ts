@@ -8,10 +8,9 @@ export function handleTransfer(event: Transfer): void {
 
   if (collection == null) {
     collection = new Collection(event.address.toHex());
-  }
-  
-  collection.collectionAddress = event.address;
-  collection.save();
+    collection.collectionAddress = event.address;
+    collection.save();
 
-  ERC721.create(event.address);
+    ERC721.create(event.address);
+  }
 }
