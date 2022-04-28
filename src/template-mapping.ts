@@ -1,3 +1,4 @@
+import { log } from "@graphprotocol/graph-ts";
 import { Erc721, Transfer } from "../generated/Erc721/Erc721";
 import { Collection } from "../generated/schema";
 import { ERC721 } from "../generated/templates";
@@ -7,6 +8,10 @@ export function handleTransfer(event: Transfer): void {
   let collection = Collection.load(collectionAddress);
 
   if (collection == null) {
+    log.info("ADDING COLLECTION TEMPLATE {} for txHash {}", [
+      event.address.toHexString(),
+      event.transaction.hash.toHexString(),
+    ]);
     collection = new Collection(event.address.toHex());
     collection.collectionAddress = event.address;
     collection.save();
