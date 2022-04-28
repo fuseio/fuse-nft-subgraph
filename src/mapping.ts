@@ -1,53 +1,148 @@
-import { ipfs, json, JSONValue, log, TypedMap } from '@graphprotocol/graph-ts'
-import { Transfer, Erc721 } from '../generated/Erc721/Erc721'
-import { Collection, Account, Collectible } from '../generated/schema'
-import { ADDRESS_ZERO, BASE_IPFS_URL, getIpfsURL, getOrCreateAccount, HTTP_SCHEME, IPFS_SCHEME } from './utils'
+import {
+  Address,
+  ipfs,
+  json,
+  JSONValue,
+  JSONValueKind,
+  log,
+  TypedMap,
+} from "@graphprotocol/graph-ts";
+import { Transfer, Erc721 } from "../generated/Erc721/Erc721";
+import { Collection, Account, Collectible } from "../generated/schema";
+import {
+  ADDRESS_ZERO,
+  BASE_IPFS_URL,
+  getIpfsURL,
+  getOrCreateAccount,
+  HTTP_SCHEME,
+  IPFS_SCHEME,
+} from "./utils";
 
 export function handleTransfer(event: Transfer): void {
-  log.info('Parsing Transfer for txHash {}', [event.transaction.hash.toHexString()])
+  log.info("Parsing Transfer for txHash {}", [
+    event.transaction.hash.toHexString(),
+  ]);
 
   let collection = Collection.load(event.address.toHex());
-  if(collection != null) {
+  if (collection != null) {
+    let account = getOrCreateAccount(event.params.to);
+    //let from = getOrCreateAccount(event.params.from);
+    let tokenId = event.params.tokenId.toHexString();
 
-  let account = getOrCreateAccount(event.params.to);
-  //let from = getOrCreateAccount(event.params.from);
-  let tokenId = event.params.tokenId.toHexString();
+    if (event.params.from.toHexString() == ADDRESS_ZERO.toHexString()) {
+      // Mint token
+      let item = new Collectible(tokenId);
 
-  if (event.params.from.toHexString() == ADDRESS_ZERO.toHexString()) {
-    // Mint token
-    let item = new Collectible(tokenId);
-
-    item.creator = account.id;
-    item.owner = item.creator;
-    item.tokenId = event.params.tokenId;
-    item.collection = collection.id;
-    item.descriptorUri = Erc721.bind(event.address).tokenURI(
-      event.params.tokenId
-    );
-    item.created = event.block.timestamp;
-    item.save()
-    
-    log.info('MINT  - tokenid: {}, txHash: {}', [tokenId, event.transaction.hash.toHexString()])
-  } else {
-    let item = Collectible.load(tokenId);
-
-    if (item != null) {
-      if (event.params.to.toHexString() == ADDRESS_ZERO.toHexString()) {
-        // Burn token
-        item.removed = event.block.timestamp;
-        log.info('BURN - tokenid: {}, txHash: {}', [tokenId, event.transaction.hash.toHexString()])
-      } else {
-        // Transfer token
-        item.owner = account.id;
-        item.modified = event.block.timestamp;
-     
-        log.info('TRANSFER - tokenid: {}, txHash: {}', [tokenId, event.transaction.hash.toHexString()])
-      }
-
+      item.creator = account.id;
+      item.owner = item.creator;
+      item.tokenId = event.params.tokenId;
+      item.collection = collection.id;
+      item.descriptorUri = Erc721.bind(event.address).tokenURI(
+        event.params.tokenId
+      );
+      item.created = event.block.timestamp;
       item.save();
+      item = readMetadata(item, item.descriptorUri, event.address, collection);
+      log.info("MINT  - tokenid: {}, txHash: {}", [
+        tokenId,
+        event.transaction.hash.toHexString(),
+      ]);
     } else {
-      log.warning("Collectible #{} not exists", [tokenId]);
+      let item = Collectible.load(tokenId);
+
+      if (item != null) {
+        if (event.params.to.toHexString() == ADDRESS_ZERO.toHexString()) {
+          // Burn token
+          item.removed = event.block.timestamp;
+          log.info("BURN - tokenid: {}, txHash: {}", [
+            tokenId,
+            event.transaction.hash.toHexString(),
+          ]);
+        } else {
+          // Transfer token
+          item.owner = account.id;
+          item.modified = event.block.timestamp;
+
+          log.info("TRANSFER - tokenid: {}, txHash: {}", [
+            tokenId,
+            event.transaction.hash.toHexString(),
+          ]);
+        }
+
+        item.save();
+      } else {
+        log.warning("Collectible #{} not exists", [tokenId]);
+      }
     }
   }
 }
+
+function readMetadata(
+  collectible: Collectible,
+  tokenURI: string,
+  erc721Address: Address,
+  collection: Collection
+): Collectible {
+  let erc721 = Erc721.bind(erc721Address);
+
+  let name = erc721.try_name();
+  if (!name.reverted) {
+    collection.collectionName = name.value;
+  }
+
+  let symbol = erc721.try_symbol();
+  if (!symbol.reverted) {
+    collection.collectionSymbol = symbol.value;
+  }
+  collection.save();
+
+  let contentPath: string;
+  if (tokenURI.startsWith(HTTP_SCHEME)) {
+    contentPath = tokenURI.split(BASE_IPFS_URL).join("");
+  } else if (tokenURI.startsWith(IPFS_SCHEME)) {
+    contentPath = tokenURI.split(IPFS_SCHEME).join("");
+  } else {
+    log.warning("URI for #{} is not working", [tokenURI]);
+    return collectible;
+  }
+
+  let ipfsData = ipfs.cat(contentPath);
+  if (!ipfsData) return collectible;
+
+  let jsonResult = json.try_fromBytes(ipfsData);
+  if (jsonResult.isError) return collectible;
+
+  let value = jsonResult.value;
+  if (value.kind == JSONValueKind.OBJECT) {
+    let data = value.toObject();
+    if (data != null) {
+      let name = data.get("name");
+      if (name != null) {
+        collectible.name = name.toString();
+      } else {
+        return collectible;
+      }
+
+      let description = data.get("description");
+      if (description != null) {
+        collectible.description = description.toString();
+      } else {
+        return collectible;
+      }
+
+      let image = data.get("image");
+      if (image != null) {
+        let imageStr = image.toString();
+        if (imageStr.includes(IPFS_SCHEME)) {
+          imageStr = getIpfsURL(imageStr);
+        }
+        collectible.imageURL = imageStr;
+      } else {
+        return collectible;
+      }
+    }
+  }
+
+  collectible.save();
+  return collectible;
 }

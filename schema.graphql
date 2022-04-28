@@ -1,6 +1,7 @@
 type Account @entity {
   id: ID!
   address: Bytes!
+  collectibles: [Collectible!] @derivedFrom(field: "owner")
 }
 
 type Collectible @entity {
@@ -27,4 +28,5 @@ type Collection @entity {
   collectionName: String
   collectionSymbol: String
   collectionAddress: Bytes!
+  collectibles: [Collectible!] @derivedFrom(field: "collection")
 }
