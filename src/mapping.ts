@@ -2,6 +2,7 @@ import {
   Address,
   ipfs,
   json,
+  Bytes,
   JSONValue,
   JSONValueKind,
   log,
@@ -12,6 +13,9 @@ import { Collection, Account, Collectible } from "../generated/schema";
 import {
   ADDRESS_ZERO,
   BASE_IPFS_URL,
+  COZY_ADDRESS,
+  DATA_SCHEME,
+  getDwebURL,
   getIpfsURL,
   getOrCreateAccount,
   HTTP_SCHEME,
@@ -42,7 +46,7 @@ export function handleTransfer(event: Transfer): void {
       );
       item.created = event.block.timestamp;
       item.save();
-      item = readMetadata(item, item.descriptorUri, event.address, collection);
+      item = readMetadata(item, item.descriptorUri, event.address);
       log.info("MINT  - tokenid: {}, txHash: {}", [
         tokenId,
         event.transaction.hash.toHexString(),
@@ -80,27 +84,61 @@ export function handleTransfer(event: Transfer): void {
 function readMetadata(
   collectible: Collectible,
   tokenURI: string,
-  erc721Address: Address,
-  collection: Collection
+  erc721Address: Address
 ): Collectible {
-  let erc721 = Erc721.bind(erc721Address);
-
-  let name = erc721.try_name();
-  if (!name.reverted) {
-    collection.collectionName = name.value;
-  }
-
-  let symbol = erc721.try_symbol();
-  if (!symbol.reverted) {
-    collection.collectionSymbol = symbol.value;
-  }
-  collection.save();
+  
 
   let contentPath: string;
   if (tokenURI.startsWith(HTTP_SCHEME)) {
     contentPath = tokenURI.split(BASE_IPFS_URL).join("");
   } else if (tokenURI.startsWith(IPFS_SCHEME)) {
     contentPath = tokenURI.split(IPFS_SCHEME).join("");
+  } else if (tokenURI.startsWith(DATA_SCHEME)) {
+    log.warning("TRYING BASE64 for #{} is not working", [tokenURI]);
+    let jsonResult = json.try_fromString(tokenURI);
+
+    if (jsonResult.isError) {
+      log.warning("FAILED BASE64 for #{} is not working", [tokenURI]);
+      return collectible;
+    }
+    log.warning("SUCCEEDED BASE64 for #{} is not working", [
+      jsonResult.value.toString(),
+    ]);
+
+    let value = jsonResult.value;
+    if (value.kind == JSONValueKind.OBJECT) {
+      let data = value.toObject();
+      if (data != null) {
+        let name = data.get("name");
+        if (name != null) {
+          collectible.name = name.toString();
+        } else {
+          return collectible;
+        }
+
+        let description = data.get("description");
+        if (description != null) {
+          collectible.description = description.toString();
+        } else {
+          return collectible;
+        }
+
+        let image = data.get("image");
+        if (image != null) {
+          let imageStr = image.toString();
+          if (imageStr.includes(IPFS_SCHEME)) {
+            if (erc721Address == COZY_ADDRESS) {
+              imageStr = getDwebURL(imageStr);
+            }
+            imageStr = getIpfsURL(imageStr);
+          }
+          collectible.imageURL = imageStr;
+        } else {
+          return collectible;
+        }
+      }
+    }
+    return collectible;
   } else {
     log.warning("URI for #{} is not working", [tokenURI]);
     return collectible;
@@ -134,6 +172,9 @@ function readMetadata(
       if (image != null) {
         let imageStr = image.toString();
         if (imageStr.includes(IPFS_SCHEME)) {
+          if (erc721Address == COZY_ADDRESS) {
+            imageStr = getDwebURL(imageStr);
+          }
           imageStr = getIpfsURL(imageStr);
         }
         collectible.imageURL = imageStr;
