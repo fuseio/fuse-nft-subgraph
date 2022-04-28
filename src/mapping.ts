@@ -15,6 +15,7 @@ import {
   BASE_IPFS_URL,
   COZY_ADDRESS,
   DATA_SCHEME,
+  getBase64,
   getDwebURL,
   getIpfsURL,
   getOrCreateAccount,
@@ -95,7 +96,7 @@ function readMetadata(
     contentPath = tokenURI.split(IPFS_SCHEME).join("");
   } else if (tokenURI.startsWith(DATA_SCHEME)) {
     log.warning("TRYING BASE64 for #{} is not working", [tokenURI]);
-    let jsonResult = json.try_fromString(tokenURI);
+    let jsonResult = json.try_fromString(getBase64(tokenURI));
 
     if (jsonResult.isError) {
       log.warning("FAILED BASE64 for #{} is not working", [tokenURI]);

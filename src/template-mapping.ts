@@ -1,4 +1,4 @@
-import { log } from "@graphprotocol/graph-ts";
+import { log, store } from "@graphprotocol/graph-ts";
 import { Erc721, Transfer } from "../generated/Erc721/Erc721";
 import { Collection } from "../generated/schema";
 import { ERC721 } from "../generated/templates";

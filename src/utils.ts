@@ -9,7 +9,7 @@ export let IPFS_SCHEME = "ipfs://";
 
 export let HTTP_SCHEME = "https://";
 
-export let DATA_SCHEME = "data:";
+export let DATA_SCHEME = "data:application/json;base64,";
 
 export let BASE_IPFS_URL = "https://ipfs.io/ipfs/";
 
@@ -31,6 +31,10 @@ export function getURIScheme(input: string): string {
 export function getIpfsPath(ipfsURI: string): string {
   return ipfsURI.split("ipfs://")[1];
 }
+
+export function getBase64(data: string): string {
+    return data.split(DATA_SCHEME)[1];
+  }
 
 export function getIpfsURL(ipfsURI: string): string {
   return BASE_IPFS_URL + getIpfsPath(ipfsURI);
