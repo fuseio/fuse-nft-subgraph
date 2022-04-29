@@ -8,6 +8,8 @@ import {
   log,
   TypedMap,
 } from "@graphprotocol/graph-ts";
+import { decode } from "as-base64";
+
 import { Transfer, Erc721 } from "../generated/Erc721/Erc721";
 import { Collection, Account, Collectible } from "../generated/schema";
 import {
@@ -32,7 +34,7 @@ export function handleTransfer(event: Transfer): void {
   if (collection != null) {
     let account = getOrCreateAccount(event.params.to);
     //let from = getOrCreateAccount(event.params.from);
-    let tokenId = event.params.tokenId.toHexString();
+    let tokenId = event.address.toHexString() + "-" + event.params.tokenId.toHexString();
 
     if (event.params.from.toHexString() == ADDRESS_ZERO.toHexString()) {
       // Mint token
@@ -90,13 +92,18 @@ function readMetadata(
   
 
   let contentPath: string;
-  if (tokenURI.startsWith(HTTP_SCHEME)) {
+  if (tokenURI.includes("QmcQKktQM9QAskj6c2eBy3o7K8g9kV6Hbh1Y7yUPTTWfFJ")){
+    log.warning("COSY COSMONAUTS", [tokenURI]);
+      return collectible;
+  }
+  else if (tokenURI.startsWith(HTTP_SCHEME)) {
     contentPath = tokenURI.split(BASE_IPFS_URL).join("");
   } else if (tokenURI.startsWith(IPFS_SCHEME)) {
     contentPath = tokenURI.split(IPFS_SCHEME).join("");
   } else if (tokenURI.startsWith(DATA_SCHEME)) {
     log.warning("TRYING BASE64 for #{} is not working", [tokenURI]);
-    let jsonResult = json.try_fromString(getBase64(tokenURI));
+    //@ts-ignore
+    let jsonResult = json.try_fromBytes(changetype<Bytes>(decode(getBase64(tokenURI))));
 
     if (jsonResult.isError) {
       log.warning("FAILED BASE64 for #{} is not working", [tokenURI]);
@@ -188,3 +195,4 @@ function readMetadata(
   collectible.save();
   return collectible;
 }
+

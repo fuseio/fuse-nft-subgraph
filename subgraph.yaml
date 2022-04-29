@@ -11,7 +11,7 @@ dataSources:
     network: fuse
     source:
       abi: Erc721
-      startBlock: 12205859
+      startBlock: 12205858
     mapping:
       kind: ethereum/events
       apiVersion:  0.0.6
