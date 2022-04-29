@@ -3,10 +3,8 @@ import {
   ipfs,
   json,
   Bytes,
-  JSONValue,
   JSONValueKind,
   log,
-  TypedMap,
 } from "@graphprotocol/graph-ts";
 import { decode } from "as-base64";
 
@@ -23,6 +21,7 @@ import {
   getOrCreateAccount,
   HTTP_SCHEME,
   IPFS_SCHEME,
+  _toBytes,
 } from "./utils";
 
 export function handleTransfer(event: Transfer): void {
@@ -102,8 +101,8 @@ function readMetadata(
     contentPath = tokenURI.split(IPFS_SCHEME).join("");
   } else if (tokenURI.startsWith(DATA_SCHEME)) {
     log.warning("TRYING BASE64 for #{} is not working", [tokenURI]);
-    //@ts-ignore
-    let jsonResult = json.try_fromBytes(changetype<Bytes>(decode(getBase64(tokenURI))));
+
+    let jsonResult = json.try_fromString(_toBytes(getBase64(tokenURI)).toString());
 
     if (jsonResult.isError) {
       log.warning("FAILED BASE64 for #{} is not working", [tokenURI]);

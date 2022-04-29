@@ -1,6 +1,5 @@
 import { Address } from "@graphprotocol/graph-ts"
 import { Account } from "../generated/schema";
-import { encode, decode } from "as-base64";
 
 export const ADDRESS_ZERO = Address.fromString(
   "0x0000000000000000000000000000000000000000"
@@ -45,25 +44,6 @@ export function getBase64(data: string): string {
 export function getIpfsURL(ipfsURI: string): string {
   return BASE_IPFS_URL + getIpfsPath(ipfsURI);
 }
-
-// export function toBytes(hexString: String): Bytes {
-//   let result = new Uint8Array(hexString.length);
-//   for (let i = 0; i < hexString.length; i += 2) {
-
-//     result[i] = parseInt(hexString.substr(i, 2), 64);
-//   }
-//   return result as Bytes;
-// }
-
-// function _base64ToArrayBuffer(base64 : string) {
-//     var binary_string = decode(base64);
-//     var len = binary_string.length;
-//     var bytes = new Uint8Array(len);
-//     for (var i = 0; i < len; i++) {
-//         bytes[i] = parseInt(binary_string.substr(i, 2), 64);
-//     }
-//     return bytes.buffer;
-// }
 
 export function getOrCreateAccount(
   address: Address,
