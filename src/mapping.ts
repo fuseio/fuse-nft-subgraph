@@ -89,17 +89,21 @@ function readMetadata(
   erc721Address: Address
 ): Collectible {
   
+  if(tokenURI != null || tokenURI != ""){
 
+  
   let contentPath: string;
-  if (tokenURI.includes("QmcQKktQM9QAskj6c2eBy3o7K8g9kV6Hbh1Y7yUPTTWfFJ")){
-    log.warning("COSY COSMONAUTS", [tokenURI]);
+  if (erc721Address == COZY_ADDRESS) {
+    log.warning("COSY COSMONAUTS {} ", [tokenURI]);
       return collectible;
   }
   else if (tokenURI.startsWith(HTTP_SCHEME)) {
     contentPath = tokenURI.split(BASE_IPFS_URL).join("");
   } else if (tokenURI.startsWith(IPFS_SCHEME)) {
     contentPath = tokenURI.split(IPFS_SCHEME).join("");
-  } else if (tokenURI.startsWith(DATA_SCHEME)) {
+  } 
+  else if (tokenURI.startsWith(DATA_SCHEME)) {
+    return collectible;
     log.warning("TRYING BASE64 for #{} is not working", [tokenURI]);
 
     let jsonResult = json.try_fromString(_toBytes(getBase64(tokenURI)).toString());
@@ -179,9 +183,9 @@ function readMetadata(
       if (image != null) {
         let imageStr = image.toString();
         if (imageStr.includes(IPFS_SCHEME)) {
-          if (erc721Address == COZY_ADDRESS) {
-            imageStr = getDwebURL(imageStr);
-          }
+          // if (erc721Address == COZY_ADDRESS) {
+          //   imageStr = getDwebURL(imageStr);
+          // }
           imageStr = getIpfsURL(imageStr);
         }
         collectible.imageURL = imageStr;
@@ -193,5 +197,7 @@ function readMetadata(
 
   collectible.save();
   return collectible;
+}
+return collectible;
 }
 
