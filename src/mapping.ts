@@ -95,7 +95,6 @@ function readMetadata(
   let contentPath: string;
   if (erc721Address == COZY_ADDRESS) {
     log.warning("COSY COSMONAUTS {} ", [tokenURI]);
-      return collectible;
   }
   else if (tokenURI.startsWith(HTTP_SCHEME)) {
     contentPath = tokenURI.split(BASE_IPFS_URL).join("");
