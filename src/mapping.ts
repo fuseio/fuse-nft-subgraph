@@ -5,6 +5,7 @@ import {
   Bytes,
   JSONValueKind,
   log,
+  BigInt,
 } from "@graphprotocol/graph-ts";
 import { decode } from "as-base64";
 
@@ -95,6 +96,9 @@ function readMetadata(
   let contentPath: string;
   if (erc721Address == COZY_ADDRESS) {
     log.warning("COSY COSMONAUTS {} ", [tokenURI]);
+    if(collectible.tokenId == BigInt.fromI32(1)){
+      return collectible;
+    }
   }
   else if (tokenURI.startsWith(HTTP_SCHEME)) {
     contentPath = tokenURI.split(BASE_IPFS_URL).join("");
@@ -182,10 +186,14 @@ function readMetadata(
       if (image != null) {
         let imageStr = image.toString();
         if (imageStr.includes(IPFS_SCHEME)) {
-          // if (erc721Address == COZY_ADDRESS) {
+          
+          // if (erc721Address.toHexString() == COZY_ADDRESS.toHexString()) {
           //   imageStr = getDwebURL(imageStr);
           // }
-          imageStr = getIpfsURL(imageStr);
+          // else {
+            imageStr = getIpfsURL(imageStr);
+          //}
+          
         }
         collectible.imageURL = imageStr;
       } else {
